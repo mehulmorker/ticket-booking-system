@@ -1,0 +1,24 @@
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# Dependencies
+node_modules
+
+# Compiled output
+*.js
+*.d.ts
+!jest.config.js
+
+# Logs
+*.log
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+

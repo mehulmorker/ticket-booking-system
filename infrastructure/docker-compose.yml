@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ticket-booking-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ticket-booking-redis
+    command: redis-server --requirepass redispassword
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # LocalStack (for local AWS services)
+  localstack:
+    image: localstack/localstack:latest
+    container_name: ticket-booking-localstack
+    ports:
+      - "4566:4566"  # LocalStack Gateway
+      - "4571:4571"  # S3
+    environment:
+      - SERVICES=s3,sqs,sns,ses,secretsmanager
+      - DEBUG=0
+      - DATA_DIR=/var/lib/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PERSISTENCE=1
+    volumes:
+      - "./localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./localstack-init:/etc/localstack/init/ready.d
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # pgAdmin (Optional - Database GUI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ticket-booking-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ticketbooking.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    networks:
+      - ticket-booking-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - tools  # Only start with --profile tools
+
+  # RedisInsight (Redis GUI - Recommended)
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: ticket-booking-redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    networks:
+      - ticket-booking-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Redis Commander (Optional - Redis GUI - Alternative)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ticket-booking-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:redispassword
+    ports:
+      - "8081:8081"
+    networks:
+      - ticket-booking-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    profiles:
+      - tools  # Only start with --profile tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  redisinsight_data:
+    driver: local
+
+networks:
+  ticket-booking-network:
+    driver: bridge
+    name: ticket-booking-network
+

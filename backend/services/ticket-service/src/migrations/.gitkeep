@@ -1,0 +1,2 @@
+# This directory contains TypeORM migration files
+# Migration files are generated using: npm run migration:generate

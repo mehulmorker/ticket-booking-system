@@ -1,0 +1,1614 @@
+{
+  "info": {
+    "name": "Ticket Booking API",
+    "description": "Complete API collection for Ticket Booking Microservices System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "ticket-booking-api"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.accessToken) {",
+                  "        pm.environment.set('auth_token', response.accessToken);",
+                  "        pm.environment.set('user_id', response.user.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user account"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.accessToken) {",
+                  "        pm.environment.set('auth_token', response.accessToken);",
+                  "        pm.environment.set('user_id', response.user.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "Get current user profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "Refresh access token using refresh token"
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
+            },
+            "description": "Request password reset email"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token-from-email\",\n  \"email\": \"test@example.com\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"]
+            },
+            "description": "Reset password with token from email"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile"]
+            },
+            "description": "Update user profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID (Service-to-Service)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{service_jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_service_url}}/users/{{user_id}}",
+              "host": ["{{auth_service_url}}"],
+              "path": ["users", "{{user_id}}"]
+            },
+            "description": "⚠️ SERVICE-TO-SERVICE ENDPOINT: Get user details by ID. Requires service JWT token (not user token).\n\nThis endpoint is used by other services (e.g., ticket-service) to fetch user email for notifications.\n\nTo test:\n1. Generate a service JWT token with payload: { type: 'service', serviceName: 'test-service' }\n2. Sign it with JWT_SECRET\n3. Set the token in 'service_jwt_token' environment variable\n\nNote: This endpoint is NOT accessible via API Gateway - call auth service directly.\nNote: Regular user JWT tokens will NOT work - requires service token with type='service'."
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication and user management endpoints"
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Venues",
+          "item": [
+            {
+              "name": "Create Venue",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.id) {",
+                      "        pm.environment.set('venue_id', response.id);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{auth_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Concert Hall\",\n  \"address\": \"123 Main St\",\n  \"city\": \"New York\",\n  \"state\": \"NY\",\n  \"zipCode\": \"10001\",\n  \"capacity\": 500\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/venues",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "venues"]
+                },
+                "description": "Create a new venue (Admin only)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Venues",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/venues",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "venues"]
+                },
+                "description": "Get all venues"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Venue by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/venues/{{venue_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "venues", "{{venue_id}}"]
+                },
+                "description": "Get venue by ID"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Venue",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{auth_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Venue Name\",\n  \"capacity\": 600\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/venues/{{venue_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "venues", "{{venue_id}}"]
+                },
+                "description": "Update venue (Admin only)"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Venue",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{auth_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/venues/{{venue_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "venues", "{{venue_id}}"]
+                },
+                "description": "Delete venue (Admin only)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Create Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id) {",
+                  "        pm.environment.set('event_id', response.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Summer Concert\",\n  \"description\": \"Amazing summer concert event\",\n  \"category\": \"CONCERT\",\n  \"venueId\": \"{{venue_id}}\",\n  \"eventDate\": \"2025-12-31T20:00:00Z\",\n  \"startTime\": \"20:00:00\",\n  \"endTime\": \"23:00:00\",\n  \"totalSeats\": 200\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/events",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events"]
+            },
+            "description": "Create a new event (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/events?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all events with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/events/{{event_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "{{event_id}}"]
+            },
+            "description": "Get event by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Event Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/events/{{event_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "{{event_id}}"]
+            },
+            "description": "Update event (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/events/{{event_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "{{event_id}}"]
+            },
+            "description": "Delete event (Admin only)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Event and venue management endpoints"
+    },
+    {
+      "name": "Seats",
+      "item": [
+        {
+          "name": "Get Seats by Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (Array.isArray(response) && response.length > 0) {",
+                  "        pm.environment.set('seat_id', response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/seats/event/{{event_id}}/available",
+              "host": ["{{base_url}}"],
+              "path": ["api", "seats", "event", "{{event_id}}", "available"]
+            },
+            "description": "Get all available seats for an event"
+          },
+          "response": []
+        },
+        {
+          "name": "Lock Seats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"ownerId\": \"{{user_id}}\",\n  \"seats\": [\"{{seat_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seats/lock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "seats", "lock"]
+            },
+            "description": "Lock seats for a specified duration (in seconds)"
+          },
+          "response": []
+        },
+        {
+          "name": "Release Seats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"ownerId\": \"{{reservation_id}}\",\n  \"seats\": [\"{{seat_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seats/release",
+              "host": ["{{base_url}}"],
+              "path": ["api", "seats", "release"]
+            },
+            "description": "Release locked seats"
+          },
+          "response": []
+        },
+        {
+          "name": "Extend Lock",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"ownerId\": \"{{reservation_id}}\",\n  \"seats\": [\"{{seat_id}}\"],\n  \"ttlSeconds\": 600\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seats/extend-lock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "seats", "extend-lock"]
+            },
+            "description": "Extend seat lock duration"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Seats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\"{{seat_id}}\"]"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seats/confirm/{{event_id}}/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "seats",
+                "confirm",
+                "{{event_id}}",
+                "{{reservation_id}}"
+              ]
+            },
+            "description": "Confirm seats (mark as reserved - internal/saga use)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seats by IDs",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"seatIds\": [\"{{seat_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seats/by-ids",
+              "host": ["{{base_url}}"],
+              "path": ["api", "seats", "by-ids"]
+            },
+            "description": "Get seat details by IDs (regardless of status - for tickets)"
+          },
+          "response": []
+        },
+        {
+          "name": "Release Seats (Compensation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"ownerId\": \"{{reservation_id}}\",\n  \"seats\": [\"{{seat_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seats/release-compensation",
+              "host": ["{{base_url}}"],
+              "path": ["api", "seats", "release-compensation"]
+            },
+            "description": "Release seats (compensation endpoint for saga - releases regardless of status)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Seat availability and locking endpoints"
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Create Reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id) {",
+                  "        pm.environment.set('reservation_id', response.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"seatIds\": [\"{{seat_id}}\"],\n  \"totalAmount\": 100.00,\n  \"idempotencyKey\": \"reservation-{{$timestamp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations"]
+            },
+            "description": "Create a new reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "{{reservation_id}}"]
+            },
+            "description": "Get reservation by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Extend Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{reservation_id}}\",\n  \"additionalMinutes\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations/{{reservation_id}}/extend",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "{{reservation_id}}", "extend"]
+            },
+            "description": "Extend reservation expiration time"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/{{reservation_id}}/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "{{reservation_id}}", "confirm"]
+            },
+            "description": "Confirm a reservation (internal/saga use)"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "{{reservation_id}}"]
+            },
+            "description": "Cancel a reservation (user-initiated)"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Reservation (Compensation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/{{reservation_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "{{reservation_id}}", "cancel"]
+            },
+            "description": "Cancel reservation (compensation endpoint for saga - no auth required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Reservations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "user", "{{user_id}}"]
+            },
+            "description": "Get all reservations for a user"
+          },
+          "response": []
+        }
+      ],
+      "description": "Reservation management endpoints"
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Initiate Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.id) {",
+                  "        pm.environment.set('payment_id', response.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{reservation_id}}\",\n  \"paymentMethod\": \"CARD\",\n  \"amount\": 100.00,\n  \"eventId\": \"{{event_id}}\",\n  \"idempotencyKey\": \"payment-{{$timestamp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "initiate"]
+            },
+            "description": "Initiate a payment for a reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/process/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "process", "{{payment_id}}"]
+            },
+            "description": "Process a pending payment (mock processing)"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Payment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": \"{{payment_id}}\",\n  \"transactionId\": \"txn-{{$timestamp}}\",\n  \"paymentDetails\": \"{\\\"cardLast4\\\":\\\"1234\\\",\\\"cardBrand\\\":\\\"VISA\\\"}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "confirm"]
+            },
+            "description": "Confirm a payment with transaction ID (triggers Saga Pattern if enabled)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "{{payment_id}}"]
+            },
+            "description": "Get payment details by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payments by Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/reservation/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "reservation", "{{reservation_id}}"]
+            },
+            "description": "Get all payments for a reservation"
+          },
+          "response": []
+        },
+        {
+          "name": "Refund Payment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": \"{{payment_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/refund",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "refund"]
+            },
+            "description": "Refund a completed payment"
+          },
+          "response": []
+        }
+      ],
+      "description": "Payment processing endpoints"
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Generate Ticket",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{reservation_id}}\",\n  \"paymentId\": \"{{payment_id}}\",\n  \"userId\": \"{{user_id}}\",\n  \"eventId\": \"{{event_id}}\",\n  \"seatIds\": [\"{{seat_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tickets/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tickets", "generate"]
+            },
+            "description": "Generate ticket PDF and QR code (usually triggered by SQS)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tickets/:ticketId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tickets", ":ticketId"],
+              "variable": [
+                {
+                  "key": "ticketId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get ticket by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket by Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tickets/reservation/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tickets", "reservation", "{{reservation_id}}"]
+            },
+            "description": "Get ticket by reservation ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket Download URL",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tickets/:ticketId/download",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tickets", ":ticketId", "download"],
+              "variable": [
+                {
+                  "key": "ticketId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get signed URL for ticket PDF download"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Ticket QR Code",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tickets/verify/:qrCode",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tickets", "verify", ":qrCode"],
+              "variable": [
+                {
+                  "key": "qrCode",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Verify ticket QR code (for venue staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Ticket (Compensation)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tickets/:ticketId/compensate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tickets", ":ticketId", "compensate"],
+              "variable": [
+                {
+                  "key": "ticketId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Delete ticket (compensation endpoint for saga - deletes ticket and S3 PDF)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Ticket generation and management endpoints"
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Send Notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"type\": \"EMAIL\",\n  \"event\": \"BOOKING_CONFIRMED\",\n  \"recipient\": \"user@example.com\",\n  \"data\": {\n    \"bookingId\": \"{{reservation_id}}\",\n    \"eventName\": \"Test Event\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/send",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "send"]
+            },
+            "description": "Send a notification (usually triggered by SQS)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/:notificationId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", ":notificationId"],
+              "variable": [
+                {
+                  "key": "notificationId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get notification by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notification Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/:notificationId/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", ":notificationId", "status"],
+              "variable": [
+                {
+                  "key": "notificationId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get notification delivery status"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "user", "{{user_id}}"]
+            },
+            "description": "Get all notifications for a user"
+          },
+          "response": []
+        }
+      ],
+      "description": "Notification management endpoints"
+    },
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "API Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Get API Gateway health and aggregated service health"
+          },
+          "response": []
+        },
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_service_url}}/health",
+              "host": ["{{auth_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Get Auth Service health"
+          },
+          "response": []
+        },
+        {
+          "name": "Event Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{event_service_url}}/health",
+              "host": ["{{event_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Get Event Service health"
+          },
+          "response": []
+        },
+        {
+          "name": "Seat Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{seat_service_url}}/health",
+              "host": ["{{seat_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Get Seat Service health"
+          },
+          "response": []
+        },
+        {
+          "name": "Reservation Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{reservation_service_url}}/health",
+              "host": ["{{reservation_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Get Reservation Service health"
+          },
+          "response": []
+        },
+        {
+          "name": "Payment Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{payment_service_url}}/health",
+              "host": ["{{payment_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Get Payment Service health"
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check endpoints for all services"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+import { registerAs } from "@nestjs/config";
+
+export default registerAs("sqs", () => {
+  const queueUrl =
+    process.env.SQS_TICKET_GENERATION_QUEUE_URL ||
+    "http://localhost:4566/000000000000/ticket-generation-queue";
+  const notificationQueueUrl =
+    process.env.SQS_NOTIFICATION_QUEUE_URL ||
+    "http://localhost:4566/000000000000/notification-queue";
+
+  // Detect if using AWS (queue URL contains amazonaws.com) or LocalStack
+  const isAWS =
+    queueUrl.includes("amazonaws.com") ||
+    notificationQueueUrl.includes("amazonaws.com");
+
+  return {
+    region: process.env.AWS_REGION || "us-east-1",
+    // Only use endpoint for LocalStack. For AWS, let SDK use default endpoints
+    endpoint:
+      process.env.AWS_ENDPOINT || (isAWS ? undefined : "http://localhost:4566"),
+    queueUrl,
+    notificationQueueUrl,
+    // Only use test credentials for LocalStack. For AWS, use IAM role (no credentials needed)
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || (isAWS ? undefined : "test"),
+    secretAccessKey:
+      process.env.AWS_SECRET_ACCESS_KEY || (isAWS ? undefined : "test"),
+  };
+});

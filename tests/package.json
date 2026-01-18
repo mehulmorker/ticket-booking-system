@@ -1,0 +1,26 @@
+{
+  "name": "integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for Ticket Booking Microservices",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:integration": "jest --config jest.config.js",
+    "test:e2e": "jest --config jest.e2e.config.js"
+  },
+  "dependencies": {
+    "@nestjs/testing": "^10.3.0",
+    "@nestjs/axios": "^3.0.1",
+    "axios": "^1.6.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@types/supertest": "^6.0.2"
+  }
+}
+

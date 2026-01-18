@@ -1,0 +1,513 @@
+version: "3.8"
+
+# ============================================
+# Centralized Docker Compose Configuration
+# ============================================
+# This file orchestrates ALL services:
+# - Infrastructure (PostgreSQL, Redis, LocalStack)
+# - Backend Services (8 microservices)
+# - Frontend (React application)
+#
+# Usage:
+#   Development: docker-compose up -d
+#   View logs:   docker-compose logs -f
+#   Stop all:    docker-compose down
+#
+# Code Changes:
+#   - Services use volume mounts for hot-reload
+#   - No rebuild needed for code changes
+#   - Rebuild only when: adding dependencies, changing Dockerfile
+#
+# Rebuild Commands:
+#   docker-compose build <service-name>
+#   docker-compose build  # rebuild all
+# ============================================
+
+services:
+  # ============================================
+  # Infrastructure Services
+  # ============================================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: ticket-booking-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: ticket-booking-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redispassword
+    volumes:
+      - redis_data:/data
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "redispassword", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: ticket-booking-redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    networks:
+      - ticket-booking-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: ticket-booking-localstack
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=s3,sqs,sns,ses,secretsmanager
+      - DEBUG=0
+      - DATA_DIR=/var/lib/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PERSISTENCE=1
+    volumes:
+      - "./infrastructure/localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./infrastructure/localstack-init:/etc/localstack/init/ready.d
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4566/_localstack/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================
+  # Backend Services
+  # ============================================
+
+  auth-service:
+    build:
+      context: ./backend/services/auth-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=auth_db
+      - DB_SYNCHRONIZE=false
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - JWT_EXPIRES_IN=24h
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redispassword
+    volumes:
+      - ./backend/services/auth-service:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  event-service:
+    build:
+      context: ./backend/services/event-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-event-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=event_db
+      - DB_SYNCHRONIZE=false
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_BUCKET_NAME=ticket-booking-event-images
+    volumes:
+      - ./backend/services/event-service:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  seat-service:
+    build:
+      context: ./backend/services/seat-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-seat-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=seat_db
+      - DB_SYNCHRONIZE=false
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redispassword
+    volumes:
+      - ./backend/services/seat-service:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  reservation-service:
+    build:
+      context: ./backend/services/reservation-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-reservation-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - PORT=3004
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=reservation_db
+      - DB_SYNCHRONIZE=false
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - SQS_RESERVATION_EXPIRY_QUEUE_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/reservation-expiry-queue
+      # Service URLs for HTTP integration
+      - SEAT_SERVICE_URL=http://seat-service:3003
+    volumes:
+      - ./backend/services/reservation-service:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      seat-service:
+        condition: service_started
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3004/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  payment-service:
+    build:
+      context: ./backend/services/payment-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-payment-service
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=payment_db
+      - DB_SYNCHRONIZE=false
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - SQS_TICKET_GENERATION_QUEUE_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/ticket-generation-queue
+      # Service URLs for HTTP integration
+      - RESERVATION_SERVICE_URL=http://reservation-service:3004
+      - SEAT_SERVICE_URL=http://seat-service:3003
+      - TICKET_SERVICE_URL=http://ticket-service:3006
+      # JWT for service-to-service auth
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    volumes:
+      - ./backend/services/payment-service:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      reservation-service:
+        condition: service_started
+      seat-service:
+        condition: service_started
+      ticket-service:
+        condition: service_started
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  ticket-service:
+    build:
+      context: ./backend/services/ticket-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-ticket-service
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=development
+      - PORT=3006
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=ticket_db
+      - DB_SYNCHRONIZE=false
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - S3_BUCKET_NAME=ticket-booking-tickets-pdf
+      - SQS_TICKET_GENERATION_QUEUE_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/ticket-generation-queue
+      - SQS_NOTIFICATION_QUEUE_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/notification-queue
+      # Service URLs for HTTP integration
+      - EVENT_SERVICE_URL=http://event-service:3002
+      - SEAT_SERVICE_URL=http://seat-service:3003
+      - RESERVATION_SERVICE_URL=http://reservation-service:3004
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - API_GATEWAY_URL=http://api-gateway:3000
+      # JWT for service-to-service auth
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    volumes:
+      - ./backend/services/ticket-service:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      event-service:
+        condition: service_started
+      seat-service:
+        condition: service_started
+      reservation-service:
+        condition: service_started
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3006/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  notification-service:
+    build:
+      context: ./backend/services/notification-service
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-notification-service
+    ports:
+      - "3007:3007"
+    environment:
+      - NODE_ENV=development
+      - PORT=3007
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=notification_db
+      - DB_SYNCHRONIZE=false
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - SQS_NOTIFICATION_QUEUE_URL=http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/notification-queue
+      - SES_FROM_EMAIL=noreply@ticketbooking.local
+    volumes:
+      - ./backend/services/notification-service:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3007/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  api-gateway:
+    build:
+      context: ./backend/services/api-gateway
+      dockerfile: Dockerfile
+      target: development
+    container_name: ticket-booking-api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - EVENT_SERVICE_URL=http://event-service:3002
+      - SEAT_SERVICE_URL=http://seat-service:3003
+      - RESERVATION_SERVICE_URL=http://reservation-service:3004
+      - PAYMENT_SERVICE_URL=http://payment-service:3005
+      - TICKET_SERVICE_URL=http://ticket-service:3006
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3007
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      # Redis for rate limiting
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redispassword
+      - REDIS_PREFIX=api-gateway
+    volumes:
+      - ./backend/services/api-gateway:/app
+      - /app/node_modules
+    depends_on:
+      - auth-service
+      - event-service
+      - seat-service
+      - reservation-service
+      - payment-service
+      - ticket-service
+      - notification-service
+      - redis
+    networks:
+      - ticket-booking-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: npm run start:dev
+
+  # ============================================
+  # Frontend Service
+  # ============================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ticket-booking-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/dist
+    depends_on:
+      - api-gateway
+    networks:
+      - ticket-booking-network
+    restart: unless-stopped
+    command: npm run dev -- --host
+
+volumes:
+  postgres_data:
+  redis_data:
+  redisinsight_data:
+
+
+networks:
+  ticket-booking-network:
+    driver: bridge
